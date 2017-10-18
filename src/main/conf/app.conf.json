@@ -1,0 +1,8 @@
+{
+  "http.port": 8080,
+  "db.url": "jdbc:derby:db;create=true",
+  "db.user": "root",
+  "db.password": "root",
+  "db.driver.class": "org.apache.derby.jdbc.EmbeddedDriver",
+  "db.max_pool_size": 30
+}
