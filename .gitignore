@@ -1,7 +1,7 @@
-**/.vertx
-**/.idea
+**/.vertx/
+**/.idea/
 **/*.iml
-**/src/main/generated
+**/src/main/generated/
 **/target/
 **/*.log
 pom.xml.tag
