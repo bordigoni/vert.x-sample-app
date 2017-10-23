@@ -1,5 +1,8 @@
-src/main/generated
-target/
+**/.vertx
+**/.idea
+**/*.iml
+**/src/main/generated
+**/target/
 **/*.log
 pom.xml.tag
 pom.xml.releaseBackup

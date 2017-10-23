@@ -1,11 +1,14 @@
 package fr.bordigoni.vertx.manager.db;
 
+import fr.bordigoni.vertx.manager.db.client.ClientService;
 import fr.bordigoni.vertx.manager.db.pollsource.PollSourceService;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.jdbc.JDBCClient;
 import io.vertx.serviceproxy.ProxyHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by benoit on 18/10/2017.
@@ -13,6 +16,9 @@ import io.vertx.serviceproxy.ProxyHelper;
  * It is not allowed to use or modify the present file without IEVA authorization.
  */
 public class DbVerticle extends AbstractVerticle {
+
+  private static final Logger LOG = LoggerFactory.getLogger(DbVerticle.class);
+
 
   public static final String CONFIG_DB_URL = "db.url";
   public static final String CONFIG_DB_USER = "db.user";
@@ -33,13 +39,37 @@ public class DbVerticle extends AbstractVerticle {
         .put("max_pool_size", config().getInteger(CONFIG_DB_MAX_POOL_SIZE, 30)),
       "manager_DS");
 
-    PollSourceService.createService(this.vertx, this.dbClient, serviceCreation -> {
+    final Future<String> pollSourceServiceCreation = Future.future();
+
+    PollSourceService.createService(this.dbClient, serviceCreation -> {
       if (serviceCreation.succeeded()) {
-        ProxyHelper.registerService(PollSourceService.class, this.vertx, serviceCreation.result(), PollSourceService.class.getName());
-        verticleStart.complete();
+        ProxyHelper.registerService(PollSourceService.class, this.vertx, serviceCreation.result(), PollSourceService.NAME);
+        pollSourceServiceCreation.complete();
       } else {
-        verticleStart.fail(serviceCreation.cause());
+        pollSourceServiceCreation.fail(serviceCreation.cause());
       }
+    });
+
+    pollSourceServiceCreation.compose(handler -> {
+
+      Future<String> clientServiceCreation = Future.future();
+
+      ClientService.createService(this.dbClient, serviceCreation -> {
+        if (serviceCreation.succeeded()) {
+          ProxyHelper.registerService(ClientService.class, this.vertx, serviceCreation.result(), ClientService.NAME);
+          clientServiceCreation.complete();
+        } else {
+          clientServiceCreation.fail(serviceCreation.cause());
+        }
+
+      });
+
+      return clientServiceCreation;
+
+
+    }).setHandler(handler -> {
+      if (handler.succeeded()) verticleStart.complete();
+      else verticleStart.fail(handler.cause());
     });
 
 

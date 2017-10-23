@@ -1,7 +1,6 @@
 package fr.bordigoni.vertx.manager.db.pollsource;
 
 import io.vertx.codegen.annotations.DataObject;
-import io.vertx.codegen.annotations.Nullable;
 import io.vertx.core.json.JsonObject;
 
 /**
@@ -12,7 +11,6 @@ import io.vertx.core.json.JsonObject;
 @DataObject
 public class PollSource {
 
-  @Nullable
   private String id;
   private String url;
   private Integer delay;
@@ -26,11 +24,10 @@ public class PollSource {
     this.delay = delay;
   }
 
-  public PollSource(final JsonObject jsonObject) {
-    final PollSource pollSource = jsonObject.mapTo(PollSource.class);
-    this.id = pollSource.id;
-    this.url = pollSource.url;
-    this.delay = pollSource.delay;
+  public PollSource(final JsonObject json) {
+    this.id=json.getString("id",json.getString("ID"));
+    this.url=json.getString("url",json.getString("URL"));
+    this.delay=json.getInteger("delay",json.getInteger("DELAY"));
   }
 
   public JsonObject toJson() {

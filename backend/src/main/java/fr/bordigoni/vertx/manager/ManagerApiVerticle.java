@@ -1,5 +1,6 @@
 package fr.bordigoni.vertx.manager;
 
+import fr.bordigoni.vertx.manager.db.client.ClientService;
 import fr.bordigoni.vertx.manager.db.pollsource.PollSourceService;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.ext.web.Router;
@@ -18,21 +19,32 @@ public class ManagerApiVerticle extends AbstractVerticle {
   public static final String HTTP_PORT = "http.port";
   private Logger logger;
   private PollSourceService pollSourceService;
+  private ClientService clientService;
 
   @Override
   public void start() throws Exception {
 
+
     this.logger = LoggerFactory.getLogger(ManagerApiVerticle.class);
 
     this.pollSourceService = PollSourceService.createProxy(this.vertx);
+    this.clientService = ClientService.createProxy(this.vertx);
 
-    final ManagerRoutesHandlers managerRoutesHandlers = new ManagerRoutesHandlers(this.pollSourceService);
+    final ManagerRoutesHandlers managerRoutesHandlers = new ManagerRoutesHandlers(this.pollSourceService, this.clientService);
 
     final Router router = Router.router(this.vertx);
     router.post().handler(BodyHandler.create());
     router.get("/util/ping").handler(managerRoutesHandlers::ping);
+
+    // poll sources
     router.post("/pollsource").handler(managerRoutesHandlers::savePollSource);
-    router.get("/pollsource/:id").handler(managerRoutesHandlers::getSource);
+    router.get("/pollsource").handler(managerRoutesHandlers::getAllPollSources);
+    router.get("/pollsource/:id").handler(managerRoutesHandlers::getPollSource);
+
+    // poll clients
+    router.post("/client").handler(managerRoutesHandlers::saveClient);
+    router.get("/client").handler(managerRoutesHandlers::getAllClients);
+    router.get("/client/:id").handler(managerRoutesHandlers::getClient);
 
     this.vertx.createHttpServer()
       .requestHandler(router::accept)

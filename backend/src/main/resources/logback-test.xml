@@ -15,7 +15,7 @@
   ~ limitations under the License.
   -->
 
-<pollSource>
+<configuration>
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
@@ -26,9 +26,10 @@
   <logger name="com.mchange.v2" level="warn"/>
   <logger name="io.netty" level="warn"/>
   <logger name="io.vertx" level="info"/>
+  <logger name="fr.bordigoni" level="debug"/>
 
   <root level="debug">
     <appender-ref ref="STDOUT"/>
   </root>
 
-</pollSource>
+</configuration>
