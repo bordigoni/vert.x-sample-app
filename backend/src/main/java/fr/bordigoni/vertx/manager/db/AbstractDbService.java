@@ -16,16 +16,14 @@ import static java.util.stream.Collectors.toList;
 
 
 /**
- * Created by benoit on 20/10/2017.
- * This file is the property of IEVA SAS only. This is not free to use code.
- * It is not allowed to use or modify the present file without IEVA authorization.
+ * Allow a user to execute basic queries limiting the amount of boilerplate code.
  */
-public abstract class AbstractDbService<T> {
+public abstract class AbstractDbService<S> {
   private final JDBCClient dbClient;
   private static final Logger LOG = LoggerFactory.getLogger(AbstractDbService.class);
 
 
-  public AbstractDbService(JDBCClient dbClient, String tableName, String tableCreationScript, Handler<AsyncResult<T>> handler) {
+  public AbstractDbService(JDBCClient dbClient, String tableName, String tableCreationScript, Handler<AsyncResult<S>> handler) {
     this.dbClient = dbClient;
     this.dbClient.getConnection(getConnection -> {
       if (getConnection.succeeded()) {
@@ -39,13 +37,13 @@ public abstract class AbstractDbService<T> {
               LOG.info("No table named "+tableName+" found. Table will be created.");
               sqlConnection.execute(tableCreationScript, createTable -> {
                 if (createTable.succeeded()) {
-                  handler.handle(Future.succeededFuture((T)this));
+                  handler.handle(Future.succeededFuture((S) this));
                 } else {
                   handler.handle(Future.failedFuture(createTable.cause()));
                 }
               });
             } else {
-              handler.handle(Future.succeededFuture((T)this));
+              handler.handle(Future.succeededFuture((S) this));
             }
             // table is already here
           } else {
@@ -62,7 +60,16 @@ public abstract class AbstractDbService<T> {
   }
 
 
-  protected final <R> void save(final R entity, final String SQL, JsonArray sqlParams, Handler<AsyncResult<R>> saveHandler) {
+  /**
+   * Save the entity into the database.
+   *
+   * @param entity      the entity that will be return to the caller when insert is done
+   * @param SQL         the insert SQL String
+   * @param sqlParams   param to be injected into the insert query
+   * @param saveHandler the handle that will carry the result of the insertion
+   * @param <T>         the entity type (for type inference logic)
+   */
+  protected final <T> void save(final T entity, final String SQL, JsonArray sqlParams, Handler<AsyncResult<T>> saveHandler) {
 
     this.dbClient.getConnection(getConnection -> {
       if (getConnection.succeeded()) {
@@ -76,33 +83,49 @@ public abstract class AbstractDbService<T> {
       }
     });
 
-
   }
 
-protected final <R> void get(String SQL, Object id, ResultRowMapper<R> rowMapper, Handler<AsyncResult<R>> getHandler) {
-  this.dbClient.getConnection(connection -> {
-    if (connection.succeeded()) {
-      connection.result().queryWithParams(SQL, new JsonArray().add(id), select -> {
-        if (select.succeeded()) {
-          final List<JsonObject> rows = select.result().getRows();
-          if (rows.isEmpty()) {
-            getHandler.handle(Future.succeededFuture(null));
-          } else if (rows.size() == 1) {
-            getHandler.handle(Future.succeededFuture(rowMapper.map(rows.get(0))));
+  /**
+   * Get an entity from the database. The result wil fail if more than one row is found but will <b>succeed with <code>null</code> if no row is found</b>
+   *
+   * @param SQL        the select to be executed
+   * @param id         the primary key value
+   * @param rowMapper  a {@link ResultRowMapper} to map a row as a {@link JsonObject} to an object. Can be a lambda expression
+   * @param getHandler the handle that will carry the result of the select
+   * @param <T>        the entity type
+   */
+  protected final <T> void get(String SQL, Object id, ResultRowMapper<T> rowMapper, Handler<AsyncResult<T>> getHandler) {
+    this.dbClient.getConnection(connection -> {
+      if (connection.succeeded()) {
+        connection.result().queryWithParams(SQL, new JsonArray().add(id), select -> {
+          if (select.succeeded()) {
+            final List<JsonObject> rows = select.result().getRows();
+            if (rows.isEmpty()) {
+              getHandler.handle(Future.succeededFuture(null));
+            } else if (rows.size() == 1) {
+              getHandler.handle(Future.succeededFuture(rowMapper.map(rows.get(0))));
+            } else {
+              getHandler.handle(Future.failedFuture("Many result (" + rows.size() + ") where found where only one was expected."));
+            }
           } else {
-            getHandler.handle(Future.failedFuture("Many result (" + rows.size() + ") where found where only one was expected."));
+            getHandler.handle(Future.failedFuture(select.cause()));
           }
-        } else {
-          getHandler.handle(Future.failedFuture(select.cause()));
-        }
-      });
-    } else {
-      getHandler.handle(Future.failedFuture(connection.cause()));
-    }
-  });
-}
+        });
+      } else {
+        getHandler.handle(Future.failedFuture(connection.cause()));
+      }
+    });
+  }
 
-  protected final <R> void getAll(final String SQL, final ResultRowMapper<R> rowMapper, final Handler<AsyncResult<List<R>>> getAllHandler) {
+  /**
+   * Will select a collection of row an map to an object type
+   *
+   * @param SQL           the select query
+   * @param rowMapper     a {@link ResultRowMapper} to map one row as a {@link JsonObject} to an object. Will be called one every row. Can be a lambda expression.
+   * @param getAllHandler the handle that will carry the result of the select as a list (never null) of object
+   * @param <T>           type of Object contained in the list
+   */
+  protected final <T> void getAll(final String SQL, final ResultRowMapper<T> rowMapper, final Handler<AsyncResult<List<T>>> getAllHandler) {
     this.dbClient.getConnection(connection -> {
       if (connection.succeeded()) {
         connection.result().query(SQL, select -> {
@@ -119,7 +142,14 @@ protected final <R> void get(String SQL, Object id, ResultRowMapper<R> rowMapper
     });
   }
 
-  protected final void delete(String SQL, String id, Handler<AsyncResult<Void>> deleteHandler) {
+  /**
+   * Will delete a row according the SQL passed and a primary key
+   *
+   * @param SQL           delete clause on a primary key
+   * @param id            primary key value
+   * @param deleteHandler the handle that will carry the success of failure of the delete
+   */
+  protected final void delete(String SQL, Object id, Handler<AsyncResult<Void>> deleteHandler) {
     this.dbClient.getConnection(getConnection -> {
       if (getConnection.succeeded()) {
         getConnection.result().updateWithParams(SQL, new JsonArray().add(id), delete -> {

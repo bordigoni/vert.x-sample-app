@@ -4,7 +4,6 @@ import fr.bordigoni.vertx.manager.db.client.Client;
 import fr.bordigoni.vertx.manager.db.client.ClientService;
 import fr.bordigoni.vertx.manager.db.pollsource.PollSource;
 import fr.bordigoni.vertx.manager.db.pollsource.PollSourceService;
-import io.vertx.codegen.annotations.Nullable;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
@@ -51,7 +50,7 @@ class ManagerRoutesHandlers {
   }
 
   void deletePollSource(RoutingContext routingContext) {
-    pollSourceService.delete(routingContext.pathParam("id"), result -> {
+    this.pollSourceService.delete(routingContext.pathParam("id"), result -> {
       if (result.succeeded()) {
         routingContext.response()
           .setStatusCode(200).end();
@@ -61,7 +60,6 @@ class ManagerRoutesHandlers {
       }
     });
   }
-  //TODO
 
   void getPollSource(final RoutingContext routingContext) {
     this.pollSourceService.get(routingContext.pathParam("id"), result -> {
@@ -91,7 +89,7 @@ class ManagerRoutesHandlers {
 
   void saveClient(final RoutingContext routingContext) {
 
-    @Nullable final JsonObject bodyAsJson = routingContext.getBodyAsJson();
+    final JsonObject bodyAsJson = routingContext.getBodyAsJson();
     this.clientService.save(bodyAsJson.mapTo(Client.class), handler -> {
       if (handler.succeeded()) {
         LOG.debug("Client saved : {}", JsonObject.mapFrom(handler.result()));
@@ -100,6 +98,18 @@ class ManagerRoutesHandlers {
           .end(JsonObject.mapFrom(handler.result()).toString());
       } else {
         LOG.error("Error saving client", handler.cause());
+        routingContext.response().setStatusCode(500).end();
+      }
+    });
+  }
+
+  void deleteClient(RoutingContext routingContext) {
+    this.clientService.delete(routingContext.pathParam("id"), result -> {
+      if (result.succeeded()) {
+        routingContext.response()
+          .setStatusCode(200).end();
+      } else {
+        LOG.error("Error deleting pollSource", result.cause());
         routingContext.response().setStatusCode(500).end();
       }
     });

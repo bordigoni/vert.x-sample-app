@@ -29,6 +29,9 @@ public interface ClientService {
   @Fluent
   ClientService getAll(Handler<AsyncResult<List<Client>>> handler);
 
+  @Fluent
+  ClientService delete(String id, Handler<AsyncResult<Void>> handler);
+
 
   static ClientService createService(JDBCClient dbClient, Handler<AsyncResult<ClientService>> handler) {
     return new ClientServiceImpl(dbClient, handler);

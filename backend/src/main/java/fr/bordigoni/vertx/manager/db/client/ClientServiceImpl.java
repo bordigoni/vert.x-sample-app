@@ -26,9 +26,10 @@ public class ClientServiceImpl extends AbstractDbService<ClientService> implemen
     "primary key (ID))";
   private static final String SQL_SAVE = "insert into " + TABLE_NAME + " (ID, NAME, EMAIL, PASSWORD) values (?,?,?, ?)";
   private static final String SQL_GET_ONE = "select * from " + TABLE_NAME + " where ID=?";
+  private static final String SQL_DELETE = "delete from " + TABLE_NAME + " where ID=?";
   private static final String SQL_GET_ALL = "select * from " + TABLE_NAME;
 
-  public ClientServiceImpl(final JDBCClient dbClient, final Handler<AsyncResult<ClientService>> handler) {
+  ClientServiceImpl(final JDBCClient dbClient, final Handler<AsyncResult<ClientService>> handler) {
     super(dbClient, TABLE_NAME, CREATE_TABLE, handler);
   }
 
@@ -52,19 +53,21 @@ public class ClientServiceImpl extends AbstractDbService<ClientService> implemen
   }
 
   @Override
-  public ClientService get(String id, Handler<AsyncResult<Client>> getHandler) {
-
-    super.get(SQL_GET_ONE, id, Client::new, getHandler);
-
+  public ClientService delete(String id, Handler<AsyncResult<Void>> handler) {
+    super.delete(SQL_DELETE, id, handler);
     return this;
   }
-
 
   @Override
-  public ClientService getAll(Handler<AsyncResult<List<Client>>> getAllHandler) {
-    super.getAll(SQL_GET_ALL, Client::new, getAllHandler);
+  public ClientService get(String id, Handler<AsyncResult<Client>> hander) {
+    super.get(SQL_GET_ONE, id, Client::new, hander);
     return this;
   }
 
+  @Override
+  public ClientService getAll(Handler<AsyncResult<List<Client>>> handler) {
+    super.getAll(SQL_GET_ALL, Client::new, handler);
+    return this;
+  }
 
 }

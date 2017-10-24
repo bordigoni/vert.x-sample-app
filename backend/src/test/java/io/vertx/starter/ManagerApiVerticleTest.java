@@ -4,6 +4,7 @@ import fr.bordigoni.vertx.manager.ManagerApiVerticle;
 import fr.bordigoni.vertx.manager.db.DbVerticle;
 import fr.bordigoni.vertx.manager.db.client.Client;
 import fr.bordigoni.vertx.manager.db.pollsource.PollSource;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -151,15 +152,7 @@ public class ManagerApiVerticleTest {
     create2.compose(ids -> this.webClient.get("/pollsource")
       .as(BodyCodec.jsonArray())
       .send(ar -> {
-        if (ar.succeeded()) {
-          JsonArray body = ar.result().body();
-          tc.assertNotNull(body);
-          tc.assertEquals(2, body.size());
-          tc.assertEquals(ids, body.stream().map(o -> ((JsonObject) o).getString("id")).collect(toSet()));
-          delete.complete(ids);
-        } else {
-          tc.fail(ar.cause());
-        }
+        assertJsonArrayOfIdMatches(tc, delete, ids, ar);
       }), delete);
 
     delete.compose(ids -> {
@@ -178,17 +171,14 @@ public class ManagerApiVerticleTest {
                         async.complete();
                       } else {
                         tc.fail("Error getting all pollsources");
-                        async.complete();
                       }
                     });
                 } else {
                   tc.fail("Error delete second pollsource");
-                  async.complete();
                 }
               });
           } else {
             tc.fail("Error delete first pollsource");
-            async.complete();
           }
         });
     }, Future.failedFuture("Async.complete() should have been called"));
@@ -198,7 +188,7 @@ public class ManagerApiVerticleTest {
 
 
   @Test
-  public void testThatTheClientIsCreatedThenGetIt(final TestContext tc) {
+  public void testThatTheClientsAreCreatedThenGetThem(final TestContext tc) {
 
     final Async async = tc.async();
 
@@ -249,9 +239,7 @@ public class ManagerApiVerticleTest {
 
     final Future<Set<String>> create2 = Future.future();
 
-
     {
-
       get.compose(firstClient -> {
 
         final Client client = new Client();
@@ -273,23 +261,56 @@ public class ManagerApiVerticleTest {
       }, create2);
     }
 
+    Future<Set<String>> delete = Future.future();
 
     create2.compose(ids -> this.webClient.get("/client")
       .as(BodyCodec.jsonArray())
       .send(ar -> {
-        if (ar.succeeded()) {
-          JsonArray body = ar.result().body();
-          tc.assertNotNull(body);
-          tc.assertEquals(2, body.size());
-          tc.assertEquals(ids, body.stream().map(o -> ((JsonObject) o).getString("id")).collect(toSet()));
-          async.complete();
-        } else {
-          tc.fail(ar.cause());
-          async.complete();
-        }
-      }), Future.failedFuture("async.complete() should have been called"));
+        assertJsonArrayOfIdMatches(tc, delete, ids, ar);
+      }), delete);
 
 
+    delete.compose(ids -> {
+      List<String> listOfId = new ArrayList<>(ids);
+      this.webClient.delete("/client/" + listOfId.get(0))
+        .send(result -> {
+          if (result.succeeded()) {
+            this.webClient.delete("/client/" + listOfId.get(1))
+              .send(result2 -> {
+                if (result2.succeeded()) {
+                  this.webClient.get("/client")
+                    .as(BodyCodec.jsonArray())
+                    .send(getAll -> {
+                      if (getAll.succeeded()) {
+                        tc.assertEquals(0, getAll.result().body().size());
+                        async.complete();
+                      } else {
+                        tc.fail("Error getting all clients");
+                      }
+                    });
+                } else {
+                  tc.fail("Error delete second client");
+                }
+              });
+          } else {
+            tc.fail("Error delete first client");
+          }
+        });
+    }, Future.failedFuture("Async.complete() should have been called"));
+
+
+  }
+
+  private void assertJsonArrayOfIdMatches(TestContext tc, Future<Set<String>> future, Set<String> ids, AsyncResult<HttpResponse<JsonArray>> ar) {
+    if (ar.succeeded()) {
+      JsonArray body = ar.result().body();
+      tc.assertNotNull(body);
+      tc.assertEquals(2, body.size());
+      tc.assertEquals(ids, body.stream().map(o -> ((JsonObject) o).getString("id")).collect(toSet()));
+      future.complete(ids);
+    } else {
+      tc.fail(ar.cause());
+    }
   }
 
 

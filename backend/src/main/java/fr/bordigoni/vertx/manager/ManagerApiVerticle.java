@@ -46,6 +46,7 @@ public class ManagerApiVerticle extends AbstractVerticle {
     router.post("/client").handler(managerRoutesHandlers::saveClient);
     router.get("/client").handler(managerRoutesHandlers::getAllClients);
     router.get("/client/:id").handler(managerRoutesHandlers::getClient);
+    router.delete("/client/:id").handler(managerRoutesHandlers::deleteClient);
 
     this.vertx.createHttpServer()
       .requestHandler(router::accept)
