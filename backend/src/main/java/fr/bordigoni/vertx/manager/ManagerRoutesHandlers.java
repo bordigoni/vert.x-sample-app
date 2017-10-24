@@ -5,17 +5,20 @@ import fr.bordigoni.vertx.manager.db.client.ClientService;
 import fr.bordigoni.vertx.manager.db.pollsource.PollSource;
 import fr.bordigoni.vertx.manager.db.pollsource.PollSourceService;
 import io.vertx.codegen.annotations.Nullable;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.stream.Collectors;
 
 /**
  * Created by benoit on 18/10/2017.
  * This file is the property of IEVA SAS only. This is not free to use code.
  * It is not allowed to use or modify the present file without IEVA authorization.
  */
-public class ManagerRoutesHandlers {
+ class ManagerRoutesHandlers {
 
   private static final Logger LOG = LoggerFactory.getLogger(ManagerRoutesHandlers.class);
 
@@ -23,12 +26,14 @@ public class ManagerRoutesHandlers {
   private final ClientService clientService;
 
 
-  public ManagerRoutesHandlers(final PollSourceService pollSourceService, ClientService clientService) {
+  ManagerRoutesHandlers(final PollSourceService pollSourceService, ClientService clientService) {
     this.pollSourceService = pollSourceService;
-  this.clientService=clientService;
+    this.clientService = clientService;
   }
 
-  public void savePollSource(final RoutingContext routingContext) {
+
+
+  void savePollSource(final RoutingContext routingContext) {
 
     @Nullable final JsonObject bodyAsJson = routingContext.getBodyAsJson();
     this.pollSourceService.save(bodyAsJson.mapTo(PollSource.class), handler -> {
@@ -44,8 +49,7 @@ public class ManagerRoutesHandlers {
     });
   }
 
-
-  public void getPollSource(final RoutingContext routingContext) {
+  void getPollSource(final RoutingContext routingContext) {
     this.pollSourceService.get(routingContext.pathParam("id"), result -> {
       if (result.succeeded()) {
         routingContext.response()
@@ -58,20 +62,20 @@ public class ManagerRoutesHandlers {
     });
   }
 
-  public void getAllPollSources(final RoutingContext routingContext) {
-    this.pollSourceService.getAll( result -> {
-      if (result.succeeded()) {
+  void getAllPollSources(final RoutingContext routingContext) {
+    this.pollSourceService.getAll(serviceCall -> {
+      if (serviceCall.succeeded()) {
         routingContext.response()
           .putHeader("Content-Type", "application/json")
-          .end(JsonObject.mapFrom(result.result()).encode());
+          .end(new JsonArray(serviceCall.result().stream().map(JsonObject::mapFrom).collect(Collectors.toList())).encode());
       } else {
-        LOG.error("Error saving pollSource", result.cause());
+        LOG.error("Error saving pollSource", serviceCall.cause());
         routingContext.response().setStatusCode(500).end();
       }
     });
   }
 
-  public void saveClient(final RoutingContext routingContext) {
+  void saveClient(final RoutingContext routingContext) {
 
     @Nullable final JsonObject bodyAsJson = routingContext.getBodyAsJson();
     this.clientService.save(bodyAsJson.mapTo(Client.class), handler -> {
@@ -87,8 +91,7 @@ public class ManagerRoutesHandlers {
     });
   }
 
-
-  public void getClient(final RoutingContext routingContext) {
+  void getClient(final RoutingContext routingContext) {
     this.clientService.get(routingContext.pathParam("id"), result -> {
       if (result.succeeded()) {
         routingContext.response()
@@ -101,20 +104,20 @@ public class ManagerRoutesHandlers {
     });
   }
 
-  public void getAllClients(final RoutingContext routingContext) {
-    this.clientService.getAll( result -> {
-      if (result.succeeded()) {
+  void getAllClients(final RoutingContext routingContext) {
+    this.clientService.getAll(serviceCall -> {
+      if (serviceCall.succeeded()) {
         routingContext.response()
           .putHeader("Content-Type", "application/json")
-          .end(JsonObject.mapFrom(result.result()).encode());
+          .end(new JsonArray(serviceCall.result().stream().map(JsonObject::mapFrom).collect(Collectors.toList())).encode());
       } else {
-        LOG.error("Error saving client", result.cause());
+        LOG.error("Error saving client", serviceCall.cause());
         routingContext.response().setStatusCode(500).end();
       }
     });
   }
 
-  public void ping(final RoutingContext rc) {
+  void ping(final RoutingContext rc) {
     rc.response().putHeader("Content-Type", "plain/text").end("OK");
   }
 
