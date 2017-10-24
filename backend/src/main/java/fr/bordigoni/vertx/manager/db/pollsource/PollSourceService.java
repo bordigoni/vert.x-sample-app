@@ -23,7 +23,10 @@ public interface PollSourceService {
   PollSourceService get(String id, Handler<AsyncResult<PollSource>> resultHandler);
 
   @Fluent
-   PollSourceService save(PollSource pollSource, Handler<AsyncResult<PollSource>> saveHandler);
+  PollSourceService save(PollSource pollSource, Handler<AsyncResult<PollSource>> saveHandler);
+
+  @Fluent
+  PollSourceService delete(String id, Handler<AsyncResult<Void>> deleteHandler);
 
   @Fluent
   PollSourceService getAll( Handler<AsyncResult<List<PollSource>>> getAllHandler);

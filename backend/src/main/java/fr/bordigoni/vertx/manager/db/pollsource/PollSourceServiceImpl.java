@@ -26,10 +26,11 @@ public class PollSourceServiceImpl extends AbstractDbService<PollSourceService> 
     "primary key (ID))";
   private static final String SQL_SAVE = "insert into " + TABLE_NAME + " (ID, URL, DELAY) values (?,?,?)";
   private static final String SQL_GET_ONE = "select * from " + TABLE_NAME + " where ID=?";
+  private static final String SQL_DELETE = "delete from " + TABLE_NAME + " where ID=?";
   private static final String SQL_GET_ALL = "select * from " + TABLE_NAME ;
 
 
-  public PollSourceServiceImpl(final JDBCClient dbClient, final Handler<AsyncResult<PollSourceService>> handler) {
+  PollSourceServiceImpl(final JDBCClient dbClient, final Handler<AsyncResult<PollSourceService>> handler) {
     super(dbClient, TABLE_NAME, CREATE_TABLE, handler);
 
   }
@@ -38,15 +39,21 @@ public class PollSourceServiceImpl extends AbstractDbService<PollSourceService> 
   public PollSourceService save(final PollSource pollSource, final Handler<AsyncResult<PollSource>> saveHandler) {
     pollSource.setId(UUID.randomUUID().toString());
 
-   super.save(pollSource, SQL_SAVE, new JsonArray()
-     .add(pollSource.getId())
-     .add(pollSource.getUrl())
-     .add(pollSource.getDelay()), saveHandler);
+    super.save(pollSource, SQL_SAVE, new JsonArray()
+      .add(pollSource.getId())
+      .add(pollSource.getUrl())
+      .add(pollSource.getDelay()), saveHandler);
 
     return this;
   }
 
-@Override
+  @Override
+  public PollSourceService delete(String id, Handler<AsyncResult<Void>> deleteHandler) {
+    super.delete(SQL_DELETE, id, deleteHandler);
+    return this;
+  }
+
+  @Override
   public PollSourceService get(final String id, final Handler<AsyncResult<PollSource>> getHandler) {
     super.get(SQL_GET_ONE, id, PollSource::new, getHandler);
     return this;

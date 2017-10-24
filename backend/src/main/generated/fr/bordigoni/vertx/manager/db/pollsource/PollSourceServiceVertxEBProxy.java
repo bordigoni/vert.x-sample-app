@@ -104,6 +104,25 @@ public class PollSourceServiceVertxEBProxy implements PollSourceService {
     return this;
   }
 
+  public PollSourceService delete(String id, Handler<AsyncResult<Void>> deleteHandler) {
+    if (closed) {
+      deleteHandler.handle(Future.failedFuture(new IllegalStateException("Proxy is closed")));
+      return this;
+    }
+    JsonObject _json = new JsonObject();
+    _json.put("id", id);
+    DeliveryOptions _deliveryOptions = (_options != null) ? new DeliveryOptions(_options) : new DeliveryOptions();
+    _deliveryOptions.addHeader("action", "delete");
+    _vertx.eventBus().<Void>send(_address, _json, _deliveryOptions, res -> {
+      if (res.failed()) {
+        deleteHandler.handle(Future.failedFuture(res.cause()));
+      } else {
+        deleteHandler.handle(Future.succeededFuture(res.result().body()));
+      }
+    });
+    return this;
+  }
+
   public PollSourceService getAll(Handler<AsyncResult<List<PollSource>>> getAllHandler) {
     if (closed) {
       getAllHandler.handle(Future.failedFuture(new IllegalStateException("Proxy is closed")));

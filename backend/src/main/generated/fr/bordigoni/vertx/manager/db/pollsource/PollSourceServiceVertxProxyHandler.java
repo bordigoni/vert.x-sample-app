@@ -152,6 +152,10 @@ public class PollSourceServiceVertxProxyHandler extends ProxyHandler {
          });
           break;
         }
+        case "delete": {
+          service.delete((java.lang.String)json.getValue("id"), createHandler(msg));
+          break;
+        }
         case "getAll": {
           service.getAll(res -> {
             if (res.failed()) {

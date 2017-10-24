@@ -18,7 +18,8 @@ import java.util.stream.Collectors;
  * This file is the property of IEVA SAS only. This is not free to use code.
  * It is not allowed to use or modify the present file without IEVA authorization.
  */
- class ManagerRoutesHandlers {
+
+class ManagerRoutesHandlers {
 
   private static final Logger LOG = LoggerFactory.getLogger(ManagerRoutesHandlers.class);
 
@@ -35,7 +36,7 @@ import java.util.stream.Collectors;
 
   void savePollSource(final RoutingContext routingContext) {
 
-    @Nullable final JsonObject bodyAsJson = routingContext.getBodyAsJson();
+    final JsonObject bodyAsJson = routingContext.getBodyAsJson();
     this.pollSourceService.save(bodyAsJson.mapTo(PollSource.class), handler -> {
       if (handler.succeeded()) {
         LOG.debug("PollSource saved : {}", JsonObject.mapFrom(handler.result()));
@@ -48,6 +49,19 @@ import java.util.stream.Collectors;
       }
     });
   }
+
+  void deletePollSource(RoutingContext routingContext) {
+    pollSourceService.delete(routingContext.pathParam("id"), result -> {
+      if (result.succeeded()) {
+        routingContext.response()
+          .setStatusCode(200).end();
+      } else {
+        LOG.error("Error deleting pollSource", result.cause());
+        routingContext.response().setStatusCode(500).end();
+      }
+    });
+  }
+  //TODO
 
   void getPollSource(final RoutingContext routingContext) {
     this.pollSourceService.get(routingContext.pathParam("id"), result -> {
@@ -120,5 +134,6 @@ import java.util.stream.Collectors;
   void ping(final RoutingContext rc) {
     rc.response().putHeader("Content-Type", "plain/text").end("OK");
   }
+
 
 }

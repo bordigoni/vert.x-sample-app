@@ -40,6 +40,7 @@ public class ManagerApiVerticle extends AbstractVerticle {
     router.post("/pollsource").handler(managerRoutesHandlers::savePollSource);
     router.get("/pollsource").handler(managerRoutesHandlers::getAllPollSources);
     router.get("/pollsource/:id").handler(managerRoutesHandlers::getPollSource);
+    router.delete("/pollsource/:id").handler(managerRoutesHandlers::deletePollSource);
 
     // poll clients
     router.post("/client").handler(managerRoutesHandlers::saveClient);

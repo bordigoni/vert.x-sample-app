@@ -24,9 +24,7 @@ import org.junit.runner.RunWith;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import static java.util.stream.Collectors.toSet;
 
@@ -148,6 +146,8 @@ public class ManagerApiVerticleTest {
     }
 
 
+    Future<Set<String>> delete = Future.future();
+
     create2.compose(ids -> this.webClient.get("/pollsource")
       .as(BodyCodec.jsonArray())
       .send(ar -> {
@@ -156,12 +156,42 @@ public class ManagerApiVerticleTest {
           tc.assertNotNull(body);
           tc.assertEquals(2, body.size());
           tc.assertEquals(ids, body.stream().map(o -> ((JsonObject) o).getString("id")).collect(toSet()));
-          async.complete();
+          delete.complete(ids);
         } else {
           tc.fail(ar.cause());
-          async.complete();
         }
-      }), Future.failedFuture("async.complete() should have been called"));
+      }), delete);
+
+    delete.compose(ids -> {
+      List<String> listOfId = new ArrayList<>(ids);
+      this.webClient.delete("/pollsource/" + listOfId.get(0))
+        .send(result -> {
+          if (result.succeeded()) {
+            this.webClient.delete("/pollsource/" + listOfId.get(1))
+              .send(result2 -> {
+                if (result2.succeeded()) {
+                  this.webClient.get("/pollsource")
+                    .as(BodyCodec.jsonArray())
+                    .send(getAll -> {
+                      if (getAll.succeeded()) {
+                        tc.assertEquals(0, getAll.result().body().size());
+                        async.complete();
+                      } else {
+                        tc.fail("Error getting all pollsources");
+                        async.complete();
+                      }
+                    });
+                } else {
+                  tc.fail("Error delete second pollsource");
+                  async.complete();
+                }
+              });
+          } else {
+            tc.fail("Error delete first pollsource");
+            async.complete();
+          }
+        });
+    }, Future.failedFuture("Async.complete() should have been called"));
 
 
   }

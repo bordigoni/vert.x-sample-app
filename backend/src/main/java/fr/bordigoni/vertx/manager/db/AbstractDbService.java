@@ -21,7 +21,7 @@ import static java.util.stream.Collectors.toList;
  * It is not allowed to use or modify the present file without IEVA authorization.
  */
 public abstract class AbstractDbService<T> {
-  protected final JDBCClient dbClient;
+  private final JDBCClient dbClient;
   private static final Logger LOG = LoggerFactory.getLogger(AbstractDbService.class);
 
 
@@ -119,4 +119,18 @@ protected final <R> void get(String SQL, Object id, ResultRowMapper<R> rowMapper
     });
   }
 
+  protected final void delete(String SQL, String id, Handler<AsyncResult<Void>> deleteHandler) {
+    this.dbClient.getConnection(getConnection -> {
+      if (getConnection.succeeded()) {
+        getConnection.result().updateWithParams(SQL, new JsonArray().add(id), delete -> {
+          if (delete.succeeded()) {
+            deleteHandler.handle(Future.succeededFuture());
+          } else {
+            deleteHandler.handle(Future.failedFuture(delete.cause()));
+          }
+        });
+      }
+    });
+
+  }
 }
