@@ -1,0 +1,17 @@
+Manage client here, create, edit, delete.
+
+<table>
+  <tr>
+    <th>Name</th>
+    <th>Email</th>
+  </tr>
+  <tr *ngFor="let client of client$ | async">
+    <td>{{client.name}}</td>
+    <td><a [routerLink]="['/client', client.id]">{{client.email}}</a></td>
+  </tr>
+</table>
+
+
+<button routerLink="/client/new">Create new</button>
+
+

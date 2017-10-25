@@ -1,0 +1,22 @@
+<div *ngIf="client$ | async as client">
+
+  <div>
+    <label>Name :</label>
+    <input [(ngModel)]="client.name">
+  </div>
+
+  <div>
+    <label>Email :</label>
+    <input [(ngModel)]="client.email">
+  </div>
+
+  <div>
+    <label>Paswword :</label>
+    <input type="password" [(ngModel)]="client.password">
+  </div>
+
+  <p>
+    <button (click)="save(client)">Save</button>
+  </p>
+
+</div>
