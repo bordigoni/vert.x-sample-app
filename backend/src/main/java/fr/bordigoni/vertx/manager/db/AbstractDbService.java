@@ -86,6 +86,31 @@ public abstract class AbstractDbService<S> {
   }
 
   /**
+   * Save the entity into the database.
+   *
+   * @param entity      the entity that will be return to the caller when insert is done
+   * @param SQL         the update SQL String
+   * @param sqlParams   param to be injected into the insert query
+   * @param saveHandler the handle that will carry the result of the update
+   * @param <T>         the entity type (for type inference logic)
+   */
+  protected final <T> void update(final T entity, final String SQL, JsonArray sqlParams, Handler<AsyncResult<Void>> saveHandler) {
+
+    this.dbClient.getConnection(getConnection -> {
+      if (getConnection.succeeded()) {
+        getConnection.result().updateWithParams(SQL, sqlParams, insert -> {
+          if (insert.succeeded()) {
+            saveHandler.handle(Future.succeededFuture());
+          } else {
+            saveHandler.handle(Future.failedFuture(insert.cause()));
+          }
+        });
+      }
+    });
+
+  }
+
+  /**
    * Get an entity from the database. The result wil fail if more than one row is found but will <b>succeed with <code>null</code> if no row is found</b>
    *
    * @param SQL        the select to be executed

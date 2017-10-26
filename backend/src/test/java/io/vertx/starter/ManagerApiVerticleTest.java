@@ -33,7 +33,6 @@ import static java.util.stream.Collectors.toSet;
 public class ManagerApiVerticleTest {
 
   private Vertx vertx;
-  // private int port;
   private WebClient webClient;
 
   @Before
@@ -151,9 +150,7 @@ public class ManagerApiVerticleTest {
 
     create2.compose(ids -> this.webClient.get("/pollsource")
       .as(BodyCodec.jsonArray())
-      .send(ar -> {
-        assertJsonArrayOfIdMatches(tc, delete, ids, ar);
-      }), delete);
+      .send(ar -> assertJsonArrayOfIdMatches(tc, delete, ids, ar)), delete);
 
     delete.compose(ids -> {
       List<String> listOfId = new ArrayList<>(ids);
@@ -237,10 +234,41 @@ public class ManagerApiVerticleTest {
       }), get);
 
 
+    Future<Client> update = Future.future();
+    {
+      get.compose(client -> {
+        client.setPassword("root");
+        this.webClient.put("/client/" + client.getId())
+          .sendJson(client, ar -> {
+            if (ar.succeeded()) {
+              tc.assertEquals(200, ar.result().statusCode());
+              update.complete(client);
+            } else {
+              tc.fail(ar.cause());
+            }
+          });
+
+      }, update);
+    }
+
+    Future<Client> get2 = Future.future();
+
+    update.compose(client -> this.webClient.get("/client/" + client.getId())
+      .as(BodyCodec.json(Client.class))
+      .send(ar -> {
+        if (ar.succeeded()) {
+          tc.assertEquals(ar.result().body().getId(), client.getId());
+          tc.assertEquals(ar.result().body().getPassword(), client.getPassword());
+          get2.complete(ar.result().body());
+        } else {
+          tc.fail(ar.cause());
+        }
+      }), get2);
+
     final Future<Set<String>> create2 = Future.future();
 
     {
-      get.compose(firstClient -> {
+      get2.compose(firstClient -> {
 
         final Client client = new Client();
         client.setName("Greedy Financial Assets Inc.");
@@ -265,9 +293,7 @@ public class ManagerApiVerticleTest {
 
     create2.compose(ids -> this.webClient.get("/client")
       .as(BodyCodec.jsonArray())
-      .send(ar -> {
-        assertJsonArrayOfIdMatches(tc, delete, ids, ar);
-      }), delete);
+      .send(ar -> assertJsonArrayOfIdMatches(tc, delete, ids, ar)), delete);
 
 
     delete.compose(ids -> {

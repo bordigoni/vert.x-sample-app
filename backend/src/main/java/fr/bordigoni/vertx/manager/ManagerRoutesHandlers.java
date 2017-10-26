@@ -4,6 +4,7 @@ import fr.bordigoni.vertx.manager.db.client.Client;
 import fr.bordigoni.vertx.manager.db.client.ClientService;
 import fr.bordigoni.vertx.manager.db.pollsource.PollSource;
 import fr.bordigoni.vertx.manager.db.pollsource.PollSourceService;
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
@@ -103,6 +104,39 @@ class ManagerRoutesHandlers {
     });
   }
 
+  void updateClient(RoutingContext routingContext) {
+    final JsonObject bodyAsJson = routingContext.getBodyAsJson();
+    if (bodyAsJson == null) {
+      routingContext.response().setStatusCode(400).end();
+    } else {
+      String id = routingContext.pathParam("id");
+      Future<Client> getFuture = Future.future();
+      this.clientService.get(id, get -> {
+        Client client = get.result();
+        if (client != null) {
+          getFuture.complete(client);
+        } else {
+          getFuture.fail("No client found for id " + id);
+          routingContext.response()
+            .setStatusCode(400)
+            .end();
+        }
+      });
+      getFuture.compose(client -> this.clientService.update(bodyAsJson.mapTo(Client.class), handler -> {
+        if (handler.succeeded()) {
+          LOG.debug("Client updated : {}", bodyAsJson);
+          routingContext.response()
+            .setStatusCode(200)
+            .end();
+        } else {
+          LOG.error("Error saving client", handler.cause());
+          routingContext.response().setStatusCode(500).end();
+        }
+
+      }), Future.succeededFuture());
+    }
+  }
+
   void deleteClient(RoutingContext routingContext) {
     this.clientService.delete(routingContext.pathParam("id"), result -> {
       if (result.succeeded()) {
@@ -144,6 +178,5 @@ class ManagerRoutesHandlers {
   void ping(final RoutingContext rc) {
     rc.response().putHeader("Content-Type", "plain/text").end("OK");
   }
-
 
 }

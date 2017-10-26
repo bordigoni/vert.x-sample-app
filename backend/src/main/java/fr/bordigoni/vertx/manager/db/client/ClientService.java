@@ -24,6 +24,9 @@ public interface ClientService {
   ClientService save(Client client, Handler<AsyncResult<Client>> handler);
 
   @Fluent
+  ClientService update(Client client, Handler<AsyncResult<Void>> handler);
+
+  @Fluent
   ClientService get(String id, Handler<AsyncResult<Client>> handler);
 
   @Fluent

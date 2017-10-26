@@ -34,7 +34,15 @@ export class ClientEditComponent implements OnInit {
   }
 
   save(client: Client) {
-    this.service.save(client).subscribe(client => this.router.navigate(['/clients']));
+    if (client.id) {
+      this.service.update(client).subscribe(() => this.back());
+    } else {
+      this.service.save(client).subscribe(() => this.back());
+    }
+  }
+
+  back() {
+    this.router.navigate(['/clients']);
   }
 
 }

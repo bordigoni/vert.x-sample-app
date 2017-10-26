@@ -25,6 +25,7 @@ public class ClientServiceImpl extends AbstractDbService<ClientService> implemen
     "PASSWORD varchar(255) not null," +
     "primary key (ID))";
   private static final String SQL_SAVE = "insert into " + TABLE_NAME + " (ID, NAME, EMAIL, PASSWORD) values (?,?,?, ?)";
+  private static final String SQL_UPDATE = "update " + TABLE_NAME + " set NAME=?, EMAIL=?, PASSWORD=? where ID=?";
   private static final String SQL_GET_ONE = "select * from " + TABLE_NAME + " where ID=?";
   private static final String SQL_DELETE = "delete from " + TABLE_NAME + " where ID=?";
   private static final String SQL_GET_ALL = "select * from " + TABLE_NAME;
@@ -47,6 +48,22 @@ public class ClientServiceImpl extends AbstractDbService<ClientService> implemen
         .add(client.getEmail())
         .add(client.getPassword()),
       saveHandler
+    );
+
+    return this;
+  }
+
+  @Override
+  public ClientService update(Client client, Handler<AsyncResult<Void>> updateHandler) {
+    super.update(
+      client,
+      SQL_UPDATE,
+      new JsonArray()
+        .add(client.getName())
+        .add(client.getEmail())
+        .add(client.getPassword())
+        .add(client.getId()),
+      updateHandler
     );
 
     return this;

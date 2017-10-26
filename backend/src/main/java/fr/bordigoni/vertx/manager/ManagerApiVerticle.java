@@ -37,26 +37,35 @@ public class ManagerApiVerticle extends AbstractVerticle {
       CorsHandler.create("*")
         .allowedMethod(HttpMethod.GET)
         .allowedMethod(HttpMethod.POST)
+        .allowedMethod(HttpMethod.PUT)
         .allowedMethod(HttpMethod.DELETE)
         .allowedMethod(HttpMethod.OPTIONS)
         .allowedHeader("content-type")
     );
 
+    router.put().handler(BodyHandler.create());
     router.post().handler(BodyHandler.create());
+
     router.get("/util/ping").handler(managerRoutesHandlers::ping);
 
     // poll sources
     router.post("/pollsource").handler(managerRoutesHandlers::savePollSource);
     router.get("/pollsource").handler(managerRoutesHandlers::getAllPollSources);
     router.get("/pollsource/:id").handler(managerRoutesHandlers::getPollSource);
+    // TODO put router.put("/pollsource/:id").handler(managerRoutesHandlers::updatePollsource);
+    // TODO Tests
     router.delete("/pollsource/:id").handler(managerRoutesHandlers::deletePollSource);
+
 
     // poll clients
     router.post("/client").handler(managerRoutesHandlers::saveClient);
     router.get("/client").handler(managerRoutesHandlers::getAllClients);
     router.get("/client/:id").handler(managerRoutesHandlers::getClient);
+    router.put("/client/:id").handler(managerRoutesHandlers::updateClient);
+    // TODO Tests
     router.delete("/client/:id").handler(managerRoutesHandlers::deleteClient);
 
+    // TODO Check input
 
     Integer port = config().getInteger(HTTP_PORT, 8080);
     this.vertx.createHttpServer()
