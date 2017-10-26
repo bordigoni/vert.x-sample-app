@@ -24,7 +24,6 @@ public class ManagerApiVerticle extends AbstractVerticle {
   @Override
   public void start() throws Exception {
 
-
     this.logger = LoggerFactory.getLogger(ManagerApiVerticle.class);
 
     this.pollSourceService = PollSourceService.createProxy(this.vertx);
@@ -38,25 +37,24 @@ public class ManagerApiVerticle extends AbstractVerticle {
 
     // poll sources
     router.post("/pollsource").handler(managerRoutesHandlers::savePollSource);
-    router.get("/pollsource").handler(managerRoutesHandlers::getAllPollSources);
+    router.get("/pollsources").handler(managerRoutesHandlers::getAllPollSources);
     router.get("/pollsource/:id").handler(managerRoutesHandlers::getPollSource);
     router.delete("/pollsource/:id").handler(managerRoutesHandlers::deletePollSource);
 
     // poll clients
     router.post("/client").handler(managerRoutesHandlers::saveClient);
-    router.get("/client").handler(managerRoutesHandlers::getAllClients);
+    router.get("/clients").handler(managerRoutesHandlers::getAllClients);
     router.get("/client/:id").handler(managerRoutesHandlers::getClient);
     router.delete("/client/:id").handler(managerRoutesHandlers::deleteClient);
 
+    Integer port = config().getInteger(HTTP_PORT, 8080);
     this.vertx.createHttpServer()
       .requestHandler(router::accept)
-      .listen(config().getInteger(HTTP_PORT), "localhost", ar -> {
+      .listen(port, "localhost", ar -> {
         if (ar.succeeded()) {
-          this.logger.info("Vertical started on port : {}", config().getInteger(HTTP_PORT));
+          this.logger.info("Vertical started on port : {}", port);
         }
       });
-
-
   }
 
 

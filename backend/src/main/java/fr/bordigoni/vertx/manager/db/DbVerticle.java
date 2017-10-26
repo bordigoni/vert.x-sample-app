@@ -32,7 +32,7 @@ public class DbVerticle extends AbstractVerticle {
   public void start(final Future<Void> verticleStart) throws Exception {
 
     this.dbClient = JDBCClient.createShared(this.vertx, new JsonObject()
-        .put("url", config().getString(CONFIG_DB_URL))
+        .put("url", config().getString(CONFIG_DB_URL, "jdbc:derby:db;create=true"))
         .put("user", config().getString(CONFIG_DB_USER, "root"))
         .put("password", config().getString(CONFIG_DB_PASSWORD, "root"))
         .put("driver_class", config().getString(CONFIG_DB_DRIVER_CLASS, "org.apache.derby.jdbc.EmbeddedDriver"))
@@ -50,7 +50,7 @@ public class DbVerticle extends AbstractVerticle {
       }
     });
 
-    pollSourceServiceCreation.compose(handler -> {
+    pollSourceServiceCreation.compose(id -> {
 
       Future<String> clientServiceCreation = Future.future();
 
