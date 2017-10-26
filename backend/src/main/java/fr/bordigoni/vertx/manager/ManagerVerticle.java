@@ -67,10 +67,10 @@ public class ManagerVerticle extends AbstractVerticle {
 
     getConfig.compose(options -> this.vertx.deployVerticle(DbVerticle.class.getName(), options, dbDeploy -> {
       if (dbDeploy.succeeded()) {
-        LOG.info("Verticle {} id deployed with id : {}", DbVerticle.class.getName(), dbDeploy.result());
+        LOG.info("Verticle deployed with id : {}", dbDeploy.result());
         this.vertx.deployVerticle(ManagerApiVerticle.class.getName(), apiDeploy -> {
           if (apiDeploy.succeeded()) {
-            LOG.info("Verticle {} id deployed with id : {}", ManagerApiVerticle.class.getName(), apiDeploy.result());
+            LOG.info("Verticle deployed with id : {}", apiDeploy.result());
             startFuture.complete();
           } else {
             startFuture.fail(apiDeploy.cause());

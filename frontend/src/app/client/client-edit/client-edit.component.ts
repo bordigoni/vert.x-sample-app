@@ -33,10 +33,8 @@ export class ClientEditComponent implements OnInit {
     })
   }
 
-
   save(client: Client) {
-    this.service.save(client);
-    this.router.navigate(['/clients']);
+    this.service.save(client).subscribe(client => this.router.navigate(['/clients']));
   }
 
 }
