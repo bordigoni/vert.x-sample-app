@@ -18,18 +18,16 @@ public class ManagerApiVerticle extends AbstractVerticle {
 
   public static final String HTTP_PORT = "http.port";
   private Logger logger;
-  private PollSourceService pollSourceService;
-  private ClientService clientService;
 
   @Override
   public void start() throws Exception {
 
     this.logger = LoggerFactory.getLogger(ManagerApiVerticle.class);
 
-    this.pollSourceService = PollSourceService.createProxy(this.vertx);
-    this.clientService = ClientService.createProxy(this.vertx);
+    PollSourceService pollSourceService = PollSourceService.createProxy(this.vertx);
+    ClientService clientService = ClientService.createProxy(this.vertx);
 
-    final ManagerRoutesHandlers managerRoutesHandlers = new ManagerRoutesHandlers(this.pollSourceService, this.clientService);
+    final ManagerRoutesHandlers managerRoutesHandlers = new ManagerRoutesHandlers(pollSourceService, clientService);
 
     final Router router = Router.router(this.vertx);
     router.post().handler(BodyHandler.create());
