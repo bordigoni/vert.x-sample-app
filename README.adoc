@@ -16,7 +16,7 @@ Then go to `frontend` directory then run the following command :
 
 *If the above command does not work* do the following before trying again
 
-* Install nodejs [http://nodejs.org/en/downloads]
+* Install link:http://nodejs.org/en/downloads[NodeJS]
 * Then run these command
 
 ```
