@@ -1,0 +1,26 @@
+= How to use this project
+
+== Backend (using vertx)
+
+Simply run go to `backend` and run `redeploy.sh`
+
+Two verticles will start deployed by `fr.bordigoni.vertx.manager.ManagerVerticle`
+
+A database will created using *Apache Derby* by default.
+
+== Frontend (angular App)
+
+Then go to `frontend` directory then run the following command :
+
+`ng serve --port 9000 --open`
+
+*If the above command does not work* do the following before trying again
+
+* Install nodejs [http://nodejs.org/en/downloads]
+* Then run these command
+
+```
+$ npm install -g @angular/cli
+$ npm install
+
+```
