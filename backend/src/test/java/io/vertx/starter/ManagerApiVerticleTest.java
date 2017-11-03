@@ -89,19 +89,22 @@ public class ManagerApiVerticleTest {
 
     final Async async = tc.async();
 
+    final String CLIENT_ID = UUID.randomUUID().toString();
+
 
     final Future<PollSource> create = Future.future();
 
     {
-      final PollSource pollSource = new PollSource("http://www.google.com", 1000);
+      final PollSource pollSource = new PollSource(CLIENT_ID, "http://www.google.com", 1000);
       this.webClient.post("/pollsource")
         .as(BodyCodec.json(PollSource.class))
         .sendJson(pollSource, ar -> {
           if (ar.succeeded()) {
             final PollSource body = ar.result().body();
-            tc.assertNotNull(body);
+            tc.assertEquals(201, ar.result().statusCode());
             tc.assertNotNull(body);
             tc.assertEquals(1000, body.getDelay());
+            tc.assertEquals(CLIENT_ID, body.getClientId());
             tc.assertEquals("http://www.google.com", body.getUrl());
             tc.assertNotNull(body.getId());
             tc.assertTrue(body.getId().length() > 0);
@@ -121,6 +124,7 @@ public class ManagerApiVerticleTest {
         if (ar.succeeded()) {
           tc.assertEquals(ar.result().body().getId(), pollSource.getId());
           tc.assertEquals(1000, ar.result().body().getDelay());
+          tc.assertEquals(CLIENT_ID, ar.result().body().getClientId());
           tc.assertEquals("http://www.google.com", ar.result().body().getUrl());
           get.complete(ar.result().body());
         } else {
@@ -160,7 +164,7 @@ public class ManagerApiVerticleTest {
     Future<Set<String>> create2 = Future.future();
     {
       get2.compose(pollSource2 -> {
-        final PollSource pollSource = new PollSource("http://www.yahoo.com", 3000);
+        final PollSource pollSource = new PollSource(CLIENT_ID, "http://www.yahoo.com", 3000);
         this.webClient.post("/pollsource")
           .as(BodyCodec.json(PollSource.class))
           .sendJson(pollSource, ar -> {
@@ -231,6 +235,7 @@ public class ManagerApiVerticleTest {
         .sendJson(client, ar -> {
           if (ar.succeeded()) {
             final Client body = ar.result().body();
+            tc.assertEquals(201, ar.result().statusCode());
             tc.assertNotNull(body);
             tc.assertEquals(client.getEmail(), body.getEmail());
             tc.assertEquals(client.getName(), body.getName());

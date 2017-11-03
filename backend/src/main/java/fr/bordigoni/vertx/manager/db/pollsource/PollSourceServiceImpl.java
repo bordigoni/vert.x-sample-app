@@ -21,11 +21,12 @@ public class PollSourceServiceImpl extends AbstractDbService<PollSourceService> 
   private static final String TABLE_NAME = "POLLSOURCE";
   private static final String CREATE_TABLE = "create table " + TABLE_NAME + " (" +
     "ID varchar(36)," +
+    "CLIENT_ID varchar(36)," +
     "URL varchar(512) not null," +
     "DELAY integer not null," +
     "primary key (ID))";
-  private static final String SQL_SAVE = "insert into " + TABLE_NAME + " (ID, URL, DELAY) values (?,?,?)";
-  private static final String SQL_UPDATE = "update " + TABLE_NAME + " set ID=?, URL=?, DELAY=?";
+  private static final String SQL_SAVE = "insert into " + TABLE_NAME + " (ID, CLIENT_ID, URL, DELAY) values (?,?,?,?)";
+  private static final String SQL_UPDATE = "update " + TABLE_NAME + " set ID=?, CLIENT_ID=?, URL=?, DELAY=?";
   private static final String SQL_GET_ONE = "select * from " + TABLE_NAME + " where ID=?";
   private static final String SQL_DELETE = "delete from " + TABLE_NAME + " where ID=?";
   private static final String SQL_GET_ALL = "select * from " + TABLE_NAME ;
@@ -42,6 +43,7 @@ public class PollSourceServiceImpl extends AbstractDbService<PollSourceService> 
 
     super.save(pollSource, SQL_SAVE, new JsonArray()
       .add(pollSource.getId())
+      .add(pollSource.getClientId())
       .add(pollSource.getUrl())
       .add(pollSource.getDelay()), saveHandler);
 
@@ -52,6 +54,7 @@ public class PollSourceServiceImpl extends AbstractDbService<PollSourceService> 
   public PollSourceService update(PollSource pollSource, Handler<AsyncResult<Void>> saveHandler) {
     super.update(pollSource, SQL_UPDATE, new JsonArray()
       .add(pollSource.getId())
+      .add(pollSource.getClientId())
       .add(pollSource.getUrl())
       .add(pollSource.getDelay()), saveHandler);
 

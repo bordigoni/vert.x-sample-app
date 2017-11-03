@@ -12,6 +12,7 @@ import io.vertx.core.json.JsonObject;
 public class PollSource {
 
   private String id;
+  private String clientId;
   private String url;
   private Integer delay;
 
@@ -19,13 +20,15 @@ public class PollSource {
 
   }
 
-  public PollSource(final String url, final int delay) {
+  public PollSource(final String clientId, final String url, final int delay) {
+    this.clientId = clientId;
     this.url = url;
     this.delay = delay;
   }
 
   public PollSource(final JsonObject json) {
     this.id=json.getString("id",json.getString("ID"));
+    this.clientId = json.getString("clientId", json.getString("CLIENT_ID"));
     this.url=json.getString("url",json.getString("URL"));
     this.delay=json.getInteger("delay",json.getInteger("DELAY"));
   }
@@ -43,6 +46,14 @@ public class PollSource {
     this.id = id;
   }
 
+  public String getClientId() {
+    return clientId;
+  }
+
+  public void setClientId(String clientId) {
+    this.clientId = clientId;
+  }
+
   public String getUrl() {
     return this.url;
   }
@@ -58,4 +69,6 @@ public class PollSource {
   public void setUrl(final String url) {
     this.url = url;
   }
+
+
 }
