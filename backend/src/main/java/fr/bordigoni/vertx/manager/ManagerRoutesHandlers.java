@@ -50,6 +50,39 @@ class ManagerRoutesHandlers {
     });
   }
 
+  public void updatePollsource(RoutingContext routingContext) {
+    final JsonObject bodyAsJson = routingContext.getBodyAsJson();
+    if (bodyAsJson == null) {
+      routingContext.response().setStatusCode(400).end();
+    } else {
+      String id = routingContext.pathParam("id");
+      Future<PollSource> getFuture = Future.future();
+      this.pollSourceService.get(id, get -> {
+        PollSource pollsource = get.result();
+        if (pollsource != null) {
+          getFuture.complete(pollsource);
+        } else {
+          getFuture.fail("No pollsource found for id " + id);
+          routingContext.response()
+            .setStatusCode(400)
+            .end();
+        }
+      });
+      getFuture.compose(client -> this.pollSourceService.update(bodyAsJson.mapTo(PollSource.class), handler -> {
+        if (handler.succeeded()) {
+          LOG.debug("Pollsource updated : {}", bodyAsJson);
+          routingContext.response()
+            .setStatusCode(200)
+            .end();
+        } else {
+          LOG.error("Error saving pollsource", handler.cause());
+          routingContext.response().setStatusCode(500).end();
+        }
+
+      }), Future.succeededFuture());
+    }
+  }
+
   void deletePollSource(RoutingContext routingContext) {
     this.pollSourceService.delete(routingContext.pathParam("id"), result -> {
       if (result.succeeded()) {
@@ -178,5 +211,6 @@ class ManagerRoutesHandlers {
   void ping(final RoutingContext rc) {
     rc.response().putHeader("Content-Type", "plain/text").end("OK");
   }
+
 
 }

@@ -101,8 +101,8 @@ public class ManagerApiVerticleTest {
             final PollSource body = ar.result().body();
             tc.assertNotNull(body);
             tc.assertNotNull(body);
-            tc.assertEquals(pollSource.getDelay(), body.getDelay());
-            tc.assertEquals(pollSource.getUrl(), body.getUrl());
+            tc.assertEquals(1000, body.getDelay());
+            tc.assertEquals("http://www.google.com", body.getUrl());
             tc.assertNotNull(body.getId());
             tc.assertTrue(body.getId().length() > 0);
             create.complete(body);
@@ -120,8 +120,8 @@ public class ManagerApiVerticleTest {
       .send(ar -> {
         if (ar.succeeded()) {
           tc.assertEquals(ar.result().body().getId(), pollSource.getId());
-          tc.assertEquals(ar.result().body().getDelay(), pollSource.getDelay());
-          tc.assertEquals(ar.result().body().getUrl(), pollSource.getUrl());
+          tc.assertEquals(1000, ar.result().body().getDelay());
+          tc.assertEquals("http://www.google.com", ar.result().body().getUrl());
           get.complete(ar.result().body());
         } else {
           tc.fail(ar.cause());
@@ -129,10 +129,38 @@ public class ManagerApiVerticleTest {
       }), get);
 
 
+    Future<PollSource> update = Future.future();
+    get.compose(pollSource -> {
+      pollSource.setDelay(2000);
+      this.webClient.put("/pollsource/" + pollSource.getId())
+        .sendJson(pollSource, ar -> {
+          if (ar.succeeded()) {
+            tc.assertEquals(200, ar.result().statusCode());
+            update.complete(pollSource);
+          } else {
+            tc.fail(ar.cause());
+          }
+        });
+    }, update);
+
+    Future<PollSource> get2 = Future.future();
+    update.compose(pollSource -> this.webClient.get("/pollsource/" + pollSource.getId())
+      .as(BodyCodec.json(PollSource.class))
+      .send(ar -> {
+        if (ar.succeeded()) {
+          tc.assertEquals(ar.result().body().getId(), pollSource.getId());
+          tc.assertEquals(2000, ar.result().body().getDelay());
+          tc.assertEquals("http://www.google.com", ar.result().body().getUrl());
+          get2.complete(ar.result().body());
+        } else {
+          tc.fail(ar.cause());
+        }
+      }), get2);
+
     Future<Set<String>> create2 = Future.future();
     {
-      get.compose(pollSource2 -> {
-        final PollSource pollSource = new PollSource("http://www.yahoo.com", 2000);
+      get2.compose(pollSource2 -> {
+        final PollSource pollSource = new PollSource("http://www.yahoo.com", 3000);
         this.webClient.post("/pollsource")
           .as(BodyCodec.json(PollSource.class))
           .sendJson(pollSource, ar -> {

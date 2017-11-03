@@ -25,6 +25,7 @@ public class PollSourceServiceImpl extends AbstractDbService<PollSourceService> 
     "DELAY integer not null," +
     "primary key (ID))";
   private static final String SQL_SAVE = "insert into " + TABLE_NAME + " (ID, URL, DELAY) values (?,?,?)";
+  private static final String SQL_UPDATE = "update " + TABLE_NAME + " set ID=?, URL=?, DELAY=?";
   private static final String SQL_GET_ONE = "select * from " + TABLE_NAME + " where ID=?";
   private static final String SQL_DELETE = "delete from " + TABLE_NAME + " where ID=?";
   private static final String SQL_GET_ALL = "select * from " + TABLE_NAME ;
@@ -40,6 +41,16 @@ public class PollSourceServiceImpl extends AbstractDbService<PollSourceService> 
     pollSource.setId(UUID.randomUUID().toString());
 
     super.save(pollSource, SQL_SAVE, new JsonArray()
+      .add(pollSource.getId())
+      .add(pollSource.getUrl())
+      .add(pollSource.getDelay()), saveHandler);
+
+    return this;
+  }
+
+  @Override
+  public PollSourceService update(PollSource pollSource, Handler<AsyncResult<Void>> saveHandler) {
+    super.update(pollSource, SQL_UPDATE, new JsonArray()
       .add(pollSource.getId())
       .add(pollSource.getUrl())
       .add(pollSource.getDelay()), saveHandler);

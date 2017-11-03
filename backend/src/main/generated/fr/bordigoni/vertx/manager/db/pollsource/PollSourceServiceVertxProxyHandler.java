@@ -152,6 +152,10 @@ public class PollSourceServiceVertxProxyHandler extends ProxyHandler {
          });
           break;
         }
+        case "update": {
+          service.update(json.getJsonObject("pollSource") == null ? null : new fr.bordigoni.vertx.manager.db.pollsource.PollSource(json.getJsonObject("pollSource")), createHandler(msg));
+          break;
+        }
         case "delete": {
           service.delete((java.lang.String)json.getValue("id"), createHandler(msg));
           break;

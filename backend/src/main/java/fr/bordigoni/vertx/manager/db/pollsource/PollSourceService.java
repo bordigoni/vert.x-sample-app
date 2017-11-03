@@ -26,6 +26,9 @@ public interface PollSourceService {
   PollSourceService save(PollSource pollSource, Handler<AsyncResult<PollSource>> saveHandler);
 
   @Fluent
+  PollSourceService update(PollSource pollSource, Handler<AsyncResult<Void>> saveHandler);
+
+  @Fluent
   PollSourceService delete(String id, Handler<AsyncResult<Void>> deleteHandler);
 
   @Fluent
