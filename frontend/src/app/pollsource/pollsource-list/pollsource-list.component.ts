@@ -4,6 +4,8 @@ import {PollSource} from '../pollsource.model';
 import {ActivatedRoute, Router} from '@angular/router';
 import 'rxjs/add/operator/switchMap'
 import {PollsourceService} from '../pollsource.service';
+import {ClientService} from '../../client/client.service';
+import {Client} from '../../client/client.model';
 
 @Component({
   selector: 'app-pollsource-list',
@@ -13,11 +15,12 @@ import {PollsourceService} from '../pollsource.service';
 export class PollsourceListComponent implements OnInit {
 
   private pollSources$: Observable<Array<PollSource>>;
-
-  clientId: string;
+  private client$: Observable<Client>;
+  private clientId: string;
 
   constructor(private router: Router,
               private route: ActivatedRoute,
+              private clientService: ClientService,
               private service: PollsourceService) {
   }
 
@@ -26,6 +29,7 @@ export class PollsourceListComponent implements OnInit {
       this.clientId = params.get('clientId');
       return this.service.getAll(this.clientId);
     });
+    this.pollSources$.subscribe(ps => this.client$ = this.clientService.get(this.clientId));
   }
 
   remove(pollsource: PollSource) {

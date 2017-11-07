@@ -1,4 +1,4 @@
-package io.vertx.starter;
+package fr.bordigoni.vertx.manager.starter;
 
 import fr.bordigoni.vertx.manager.ManagerApiVerticle;
 import fr.bordigoni.vertx.manager.db.DbVerticle;

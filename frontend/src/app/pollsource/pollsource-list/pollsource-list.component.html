@@ -1,6 +1,6 @@
 <button (click)="back()">Back</button>
 
-<h4>Pollsources {{clientId}}</h4>
+<h4 *ngIf="client$ | async as client">{{client.name}}'s pollsources</h4>
 
 <table>
   <tr>
