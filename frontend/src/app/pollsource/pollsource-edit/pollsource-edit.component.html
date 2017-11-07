@@ -1,3 +1,18 @@
-<p>
-  pollsource-edit works!
-</p>
+<div *ngIf="pollSource$ | async as pollsource">
+
+  <div>
+    <label>URL :</label>
+    <input [(ngModel)]="pollsource.url">
+  </div>
+
+  <div>
+    <label>Polling delay (in ms) :</label>
+    <input [(ngModel)]="pollsource.delay" type="number" min="100" step="10">
+  </div>
+
+
+  <p>
+    <button (click)="save(pollsource)">Save</button>
+  </p>
+
+</div>
