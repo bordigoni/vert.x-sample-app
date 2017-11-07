@@ -28,6 +28,11 @@ export class PollsourceListComponent implements OnInit {
     });
   }
 
+  remove(pollsource: PollSource) {
+    this.service.remove(pollsource.clientId, pollsource.id)
+      .subscribe(() => this.pollSources$ = this.service.getAll(this.clientId));
+  }
+
   back() {
     this.router.navigate(['/client']);
   }

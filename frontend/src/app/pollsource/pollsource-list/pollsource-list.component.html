@@ -11,6 +11,9 @@
     <td>{{pollSource.url}}</td>
     <td>{{pollSource.delay}}</td>
     <td><a [routerLink]="pollSource.id">edit</a></td>
+    <td>
+      <button (click)="remove(pollSource)">delete</button>
+    </td>
   </tr>
 </table>
 
