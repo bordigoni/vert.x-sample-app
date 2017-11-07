@@ -49,11 +49,11 @@ public class ManagerApiVerticle extends AbstractVerticle {
     router.get("/util/ping").handler(managerRoutesHandlers::ping);
 
     // poll sources
-    router.post("/pollsource").handler(managerRoutesHandlers::savePollSource);
-    router.get("/pollsource").handler(managerRoutesHandlers::getAllPollSources);
-    router.get("/pollsource/:id").handler(managerRoutesHandlers::getPollSource);
-    router.put("/pollsource/:id").handler(managerRoutesHandlers::updatePollsource);
-    router.delete("/pollsource/:id").handler(managerRoutesHandlers::deletePollSource);
+    router.post("/client/:clientId/pollsource").handler(managerRoutesHandlers::savePollSource);
+    router.get("/client/:clientId/pollsource").handler(managerRoutesHandlers::getAllPollSources);
+    router.get("/client/:clientId/pollsource/:id").handler(managerRoutesHandlers::getPollSource);
+    router.put("/client/:clientId/pollsource/:id").handler(managerRoutesHandlers::updatePollsource);
+    router.delete("/client/:clientId/pollsource/:id").handler(managerRoutesHandlers::deletePollSource);
 
 
     // poll clients
@@ -63,7 +63,7 @@ public class ManagerApiVerticle extends AbstractVerticle {
     router.put("/client/:id").handler(managerRoutesHandlers::updateClient);
     router.delete("/client/:id").handler(managerRoutesHandlers::deleteClient);
 
-    // TODO Check input
+    // TODO validate JSON input
 
     Integer port = config().getInteger(HTTP_PORT, 8080);
     this.vertx.createHttpServer()

@@ -84,19 +84,62 @@ public class ManagerApiVerticleTest {
   }
 
 
+  private static Client createClient() {
+    final Client client = new Client();
+    client.setName("Bordigoni Banking Inc.");
+    client.setEmail("benoit@bordigoni.fr");
+    client.setPassword("aV3ry$3cr3tPa$$w0rd!");
+    return client;
+  }
+
+  private static String getPrefixUrl(String clientId) {
+    return "/client/" + clientId;
+  }
+
+
+  private void assertJsonArrayOfIdMatches(TestContext tc, Future<Set<String>> future, Set<String> ids, AsyncResult<HttpResponse<JsonArray>> ar) {
+    if (ar.succeeded()) {
+      JsonArray body = ar.result().body();
+      tc.assertNotNull(body);
+      tc.assertEquals(2, body.size());
+      tc.assertEquals(ids, body.stream().map(o -> ((JsonObject) o).getString("id")).collect(toSet()));
+      future.complete(ids);
+    } else {
+      tc.fail(ar.cause());
+    }
+  }
+
   @Test
   public void testThatThePollSourcesAreCreatedThenGetThem(final TestContext tc) {
 
     final Async async = tc.async();
 
-    final String CLIENT_ID = UUID.randomUUID().toString();
 
+    final Future<Client> createClient = Future.future();
+
+    {
+      final Client client = createClient();
+
+      this.webClient.post("/client")
+        .as(BodyCodec.json(Client.class))
+        .sendJson(client, ar -> {
+          if (ar.succeeded()) {
+            final Client body = ar.result().body();
+            tc.assertEquals(201, ar.result().statusCode());
+            createClient.complete(body);
+          } else {
+            tc.fail(ar.cause());
+          }
+        });
+    }
 
     final Future<PollSource> create = Future.future();
 
+    createClient.compose(client ->
+
     {
-      final PollSource pollSource = new PollSource(CLIENT_ID, "http://www.google.com", 1000);
-      this.webClient.post("/pollsource")
+      final PollSource pollSource = new PollSource(client.getId(), "http://www.google.com", 1000);
+      this.webClient.post(getPrefixUrl(client.getId()) + "/pollsource")
         .as(BodyCodec.json(PollSource.class))
         .sendJson(pollSource, ar -> {
           if (ar.succeeded()) {
@@ -104,7 +147,7 @@ public class ManagerApiVerticleTest {
             tc.assertEquals(201, ar.result().statusCode());
             tc.assertNotNull(body);
             tc.assertEquals(1000, body.getDelay());
-            tc.assertEquals(CLIENT_ID, body.getClientId());
+            tc.assertEquals(client.getId(), body.getClientId());
             tc.assertEquals("http://www.google.com", body.getUrl());
             tc.assertNotNull(body.getId());
             tc.assertTrue(body.getId().length() > 0);
@@ -113,18 +156,17 @@ public class ManagerApiVerticleTest {
             tc.fail(ar.cause());
           }
         });
-    }
+    }, create);
 
 
     Future<PollSource> get = Future.future();
 
-    create.compose(pollSource -> this.webClient.get("/pollsource/" + pollSource.getId())
+    create.compose(pollSource -> this.webClient.get(getPrefixUrl(pollSource.getClientId()) + "/pollsource/" + pollSource.getId())
       .as(BodyCodec.json(PollSource.class))
       .send(ar -> {
         if (ar.succeeded()) {
           tc.assertEquals(ar.result().body().getId(), pollSource.getId());
           tc.assertEquals(1000, ar.result().body().getDelay());
-          tc.assertEquals(CLIENT_ID, ar.result().body().getClientId());
           tc.assertEquals("http://www.google.com", ar.result().body().getUrl());
           get.complete(ar.result().body());
         } else {
@@ -135,12 +177,13 @@ public class ManagerApiVerticleTest {
 
     Future<PollSource> update = Future.future();
     get.compose(pollSource -> {
-      pollSource.setDelay(2000);
-      this.webClient.put("/pollsource/" + pollSource.getId())
-        .sendJson(pollSource, ar -> {
+      final PollSource updatedPollSource = new PollSource(pollSource.toJson());
+      updatedPollSource.setDelay(2000);
+      this.webClient.put(getPrefixUrl(pollSource.getClientId()) + "/pollsource/" + pollSource.getId())
+        .sendJson(updatedPollSource, ar -> {
           if (ar.succeeded()) {
             tc.assertEquals(200, ar.result().statusCode());
-            update.complete(pollSource);
+            update.complete(updatedPollSource);
           } else {
             tc.fail(ar.cause());
           }
@@ -148,7 +191,7 @@ public class ManagerApiVerticleTest {
     }, update);
 
     Future<PollSource> get2 = Future.future();
-    update.compose(pollSource -> this.webClient.get("/pollsource/" + pollSource.getId())
+    update.compose(pollSource -> this.webClient.get(getPrefixUrl(pollSource.getClientId()) + "/pollsource/" + pollSource.getId())
       .as(BodyCodec.json(PollSource.class))
       .send(ar -> {
         if (ar.succeeded()) {
@@ -161,15 +204,15 @@ public class ManagerApiVerticleTest {
         }
       }), get2);
 
-    Future<Set<String>> create2 = Future.future();
+    Future<Set<PollSource>> create2 = Future.future();
     {
       get2.compose(pollSource2 -> {
-        final PollSource pollSource = new PollSource(CLIENT_ID, "http://www.yahoo.com", 3000);
-        this.webClient.post("/pollsource")
+        final PollSource pollSource = new PollSource(pollSource2.getClientId(), "http://www.yahoo.com", 3000);
+        this.webClient.post(getPrefixUrl(pollSource2.getClientId()) + "/pollsource")
           .as(BodyCodec.json(PollSource.class))
           .sendJson(pollSource, ar -> {
             if (ar.succeeded()) {
-              create2.complete(new HashSet<>(Arrays.asList(create.result().getId(), ar.result().body().getId())));
+              create2.complete(new HashSet<>(Arrays.asList(create.result(), ar.result().body())));
             } else {
               tc.fail(ar.cause());
             }
@@ -178,21 +221,22 @@ public class ManagerApiVerticleTest {
     }
 
 
-    Future<Set<String>> delete = Future.future();
+    Future<Set<PollSource>> delete = Future.future();
 
-    create2.compose(ids -> this.webClient.get("/pollsource")
+    create2.compose(pollSources -> this.webClient.get(getPrefixUrl(create.result().getClientId()) + "/pollsource")
       .as(BodyCodec.jsonArray())
-      .send(ar -> assertJsonArrayOfIdMatches(tc, delete, ids, ar)), delete);
+      .send(ar -> assertJsonArrayOfPollsourceMatches(tc, delete, pollSources, ar)), delete);
 
     delete.compose(ids -> {
-      List<String> listOfId = new ArrayList<>(ids);
-      this.webClient.delete("/pollsource/" + listOfId.get(0))
+      List<PollSource> pollsources = new ArrayList<>(ids);
+      String prefixUrl = getPrefixUrl(pollsources.get(0).getClientId());
+      this.webClient.delete(prefixUrl + "/pollsource/" + pollsources.get(0).getId())
         .send(result -> {
           if (result.succeeded()) {
-            this.webClient.delete("/pollsource/" + listOfId.get(1))
+            this.webClient.delete(prefixUrl + "/pollsource/" + pollsources.get(1).getId())
               .send(result2 -> {
                 if (result2.succeeded()) {
-                  this.webClient.get("/pollsource")
+                  this.webClient.get(prefixUrl + "/pollsource")
                     .as(BodyCodec.jsonArray())
                     .send(getAll -> {
                       if (getAll.succeeded()) {
@@ -215,7 +259,6 @@ public class ManagerApiVerticleTest {
 
   }
 
-
   @Test
   public void testThatTheClientsAreCreatedThenGetThem(final TestContext tc) {
 
@@ -225,10 +268,7 @@ public class ManagerApiVerticleTest {
 
 
     {
-      final Client client = new Client();
-      client.setName("Bordigoni Banking Inc.");
-      client.setEmail("benoit@bordigoni.fr");
-      client.setPassword("aV3ry$3cr3tPa$$w0rd!");
+      final Client client = createClient();
 
       this.webClient.post("/client")
         .as(BodyCodec.json(Client.class))
@@ -305,7 +345,7 @@ public class ManagerApiVerticleTest {
 
         final Client client = new Client();
         client.setName("Greedy Financial Assets Inc.");
-        client.setEmail("greedy@ashell.money");
+        client.setEmail("greedy@as-hell.money");
         client.setPassword("an0therV3ry$3cr3tPa$$w0rd!");
 
         this.webClient.post("/client")
@@ -360,13 +400,13 @@ public class ManagerApiVerticleTest {
 
   }
 
-  private void assertJsonArrayOfIdMatches(TestContext tc, Future<Set<String>> future, Set<String> ids, AsyncResult<HttpResponse<JsonArray>> ar) {
+  private void assertJsonArrayOfPollsourceMatches(TestContext tc, Future<Set<PollSource>> future, Set<PollSource> pollSources, AsyncResult<HttpResponse<JsonArray>> ar) {
     if (ar.succeeded()) {
       JsonArray body = ar.result().body();
       tc.assertNotNull(body);
       tc.assertEquals(2, body.size());
-      tc.assertEquals(ids, body.stream().map(o -> ((JsonObject) o).getString("id")).collect(toSet()));
-      future.complete(ids);
+      tc.assertEquals(pollSources.stream().map(PollSource::getId).collect(toSet()), body.stream().map(o -> ((JsonObject) o).getString("id")).collect(toSet()));
+      future.complete(pollSources);
     } else {
       tc.fail(ar.cause());
     }

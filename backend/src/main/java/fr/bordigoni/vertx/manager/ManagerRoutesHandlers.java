@@ -14,9 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.util.stream.Collectors;
 
 /**
- * Created by benoit on 18/10/2017.
- * This file is the property of IEVA SAS only. This is not free to use code.
- * It is not allowed to use or modify the present file without IEVA authorization.
+ *
  */
 
 class ManagerRoutesHandlers {
@@ -36,67 +34,95 @@ class ManagerRoutesHandlers {
 
   void savePollSource(final RoutingContext routingContext) {
 
-    final JsonObject bodyAsJson = routingContext.getBodyAsJson();
-    this.pollSourceService.save(bodyAsJson.mapTo(PollSource.class), handler -> {
-      if (handler.succeeded()) {
-        LOG.debug("PollSource saved : {}", JsonObject.mapFrom(handler.result()));
-        routingContext.response().putHeader("Content-Type", "application/json")
-          .setStatusCode(201)
-          .end(JsonObject.mapFrom(handler.result()).toString());
+    Future<Void> getClient = getClientFromId(routingContext);
+
+    getClient.compose(ar -> {
+      final JsonObject bodyAsJson = routingContext.getBodyAsJson();
+      if (bodyAsJson == null) {
+        routingContext.response().setStatusCode(400).end();
       } else {
-        LOG.error("Error saving pollSource", handler.cause());
-        routingContext.response().setStatusCode(500).end();
+        this.pollSourceService.save(bodyAsJson.mapTo(PollSource.class), handler -> {
+          if (handler.succeeded()) {
+            LOG.debug("PollSource saved : {}", JsonObject.mapFrom(handler.result()));
+            routingContext.response().putHeader("Content-Type", "application/json")
+              .setStatusCode(201)
+              .end(JsonObject.mapFrom(handler.result()).toString());
+          } else {
+            LOG.error("Error saving pollSource", handler.cause());
+            routingContext.response().setStatusCode(500).end();
+          }
+        });
       }
+      return Future.succeededFuture();
     });
+
+
   }
 
-  public void updatePollsource(RoutingContext routingContext) {
+  void updatePollsource(RoutingContext routingContext) {
+
+    Future<Void> getPollSource = Future.future();
+
     final JsonObject bodyAsJson = routingContext.getBodyAsJson();
     if (bodyAsJson == null) {
+      getPollSource.fail("No body in request");
       routingContext.response().setStatusCode(400).end();
     } else {
-      String id = routingContext.pathParam("id");
-      Future<PollSource> getFuture = Future.future();
-      this.pollSourceService.get(id, get -> {
-        PollSource pollsource = get.result();
-        if (pollsource != null) {
-          getFuture.complete(pollsource);
-        } else {
-          getFuture.fail("No pollsource found for id " + id);
-          routingContext.response()
-            .setStatusCode(400)
-            .end();
-        }
-      });
-      getFuture.compose(client -> this.pollSourceService.update(bodyAsJson.mapTo(PollSource.class), handler -> {
+
+      Future<Void> getClient = getClientFromId(routingContext);
+
+
+      getClient.compose(ar -> {
+
+        String id = routingContext.pathParam("id");
+        this.pollSourceService.get(id, get -> {
+          PollSource pollsource = get.result();
+          if (pollsource != null) {
+            getPollSource.complete();
+          } else {
+            getPollSource.fail("No pollsource found for id " + id);
+            routingContext.response()
+              .setStatusCode(400)
+              .end();
+          }
+        });
+      }, getPollSource);
+
+      getPollSource.compose(ar -> this.pollSourceService.update(new PollSource(bodyAsJson), handler -> {
         if (handler.succeeded()) {
           LOG.debug("Pollsource updated : {}", bodyAsJson);
-          routingContext.response()
-            .setStatusCode(200)
-            .end();
+          routingContext.response().setStatusCode(200).end();
         } else {
           LOG.error("Error saving pollsource", handler.cause());
           routingContext.response().setStatusCode(500).end();
         }
 
       }), Future.succeededFuture());
+
     }
   }
 
   void deletePollSource(RoutingContext routingContext) {
-    this.pollSourceService.delete(routingContext.pathParam("id"), result -> {
+
+    Future<Void> getClient = getClientFromId(routingContext);
+
+    getClient.compose(ar -> this.pollSourceService.delete(routingContext.pathParam("id"), result -> {
       if (result.succeeded()) {
-        routingContext.response()
-          .setStatusCode(200).end();
+        routingContext.response().setStatusCode(200).end();
       } else {
         LOG.error("Error deleting pollSource", result.cause());
         routingContext.response().setStatusCode(500).end();
       }
-    });
+    }), Future.succeededFuture());
   }
 
   void getPollSource(final RoutingContext routingContext) {
-    this.pollSourceService.get(routingContext.pathParam("id"), result -> {
+
+    Future<Void> getClient = getClientFromId(routingContext);
+
+    getClient.compose(ar ->
+
+      this.pollSourceService.get(routingContext.pathParam("id"), result -> {
       if (result.succeeded()) {
         routingContext.response()
           .putHeader("Content-Type", "application/json")
@@ -105,11 +131,15 @@ class ManagerRoutesHandlers {
         LOG.error("Error saving pollSource", result.cause());
         routingContext.response().setStatusCode(500).end();
       }
-    });
+      }), Future.succeededFuture());
   }
 
   void getAllPollSources(final RoutingContext routingContext) {
-    this.pollSourceService.getAll(serviceCall -> {
+
+    Future<Void> getClient = getClientFromId(routingContext);
+
+    getClient.compose(ar ->
+      this.pollSourceService.getAll(serviceCall -> {
       if (serviceCall.succeeded()) {
         routingContext.response()
           .putHeader("Content-Type", "application/json")
@@ -118,8 +148,9 @@ class ManagerRoutesHandlers {
         LOG.error("Error saving pollSource", serviceCall.cause());
         routingContext.response().setStatusCode(500).end();
       }
-    });
+      }), Future.succeededFuture());
   }
+
 
   void saveClient(final RoutingContext routingContext) {
 
@@ -155,7 +186,7 @@ class ManagerRoutesHandlers {
             .end();
         }
       });
-      getFuture.compose(client -> this.clientService.update(bodyAsJson.mapTo(Client.class), handler -> {
+      getFuture.compose(client -> this.clientService.update(new Client(bodyAsJson), handler -> {
         if (handler.succeeded()) {
           LOG.debug("Client updated : {}", bodyAsJson);
           routingContext.response()
@@ -212,5 +243,23 @@ class ManagerRoutesHandlers {
     rc.response().putHeader("Content-Type", "plain/text").end("OK");
   }
 
+  private Future<Void> getClientFromId(RoutingContext routingContext) {
+    String clientId = routingContext.pathParam("clientId");
 
+    Future<Void> getClient = Future.future();
+
+    this.clientService.get(clientId, clientResult -> {
+      if (clientResult.succeeded()) {
+        if (clientResult.result() != null) {
+          getClient.complete();
+        } else {
+          routingContext.response().setStatusCode(404).end();
+          getClient.fail("Client not found");
+        }
+      } else {
+        getClient.fail(clientResult.cause());
+      }
+    });
+    return getClient;
+  }
 }
