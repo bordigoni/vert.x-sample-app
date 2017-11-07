@@ -11,9 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Created by benoit on 17/10/2017.
- * This file is the property of IEVA SAS only. This is not free to use code.
- * It is not allowed to use or modify the present file without IEVA authorization.
+ *
  */
 public class ManagerApiVerticle extends AbstractVerticle {
 

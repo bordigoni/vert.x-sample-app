@@ -10,9 +10,7 @@ import io.vertx.ext.jdbc.JDBCClient;
 import java.util.List;
 
 /**
- * Created by benoit on 17/10/2017.
- * This file is the property of IEVA SAS only. This is not free to use code.
- * It is not allowed to use or modify the present file without IEVA authorization.
+ *
  */
 @ProxyGen
 public interface PollSourceService {
