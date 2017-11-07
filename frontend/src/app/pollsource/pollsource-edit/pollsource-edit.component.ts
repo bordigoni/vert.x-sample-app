@@ -35,7 +35,11 @@ export class PollsourceEditComponent implements OnInit {
   }
 
   save(pollSource: PollSource) {
-    this.service.save(this.clientId, pollSource).toPromise().then(() => this.back());
+    if (pollSource.id) {
+      this.service.update(this.clientId, pollSource).subscribe(() => this.back(), err => console.log("ERROR !!!"));
+    } else {
+      this.service.save(this.clientId, pollSource).subscribe(() => this.back());
+    }
   }
 
   back() {

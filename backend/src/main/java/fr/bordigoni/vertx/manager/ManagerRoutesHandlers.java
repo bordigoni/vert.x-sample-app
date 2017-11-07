@@ -61,18 +61,16 @@ class ManagerRoutesHandlers {
 
   void updatePollsource(RoutingContext routingContext) {
 
-    Future<Void> getPollSource = Future.future();
 
     final JsonObject bodyAsJson = routingContext.getBodyAsJson();
+
     if (bodyAsJson == null) {
-      getPollSource.fail("No body in request");
       routingContext.response().setStatusCode(400).end();
     } else {
 
-      Future<Void> getClient = getClientFromId(routingContext);
+      Future<Void> getPollSource = Future.future();
 
-
-      getClient.compose(ar -> {
+      getClientFromId(routingContext).compose(ar -> {
 
         String id = routingContext.pathParam("id");
         this.pollSourceService.get(id, get -> {
@@ -118,11 +116,7 @@ class ManagerRoutesHandlers {
 
   void getPollSource(final RoutingContext routingContext) {
 
-    Future<Void> getClient = getClientFromId(routingContext);
-
-    getClient.compose(ar ->
-
-      this.pollSourceService.get(routingContext.pathParam("id"), result -> {
+    this.pollSourceService.get(routingContext.pathParam("id"), result -> {
       if (result.succeeded()) {
         routingContext.response()
           .putHeader("Content-Type", "application/json")
@@ -131,7 +125,7 @@ class ManagerRoutesHandlers {
         LOG.error("Error saving pollSource", result.cause());
         routingContext.response().setStatusCode(500).end();
       }
-      }), Future.succeededFuture());
+    });
   }
 
   void getAllPollSources(final RoutingContext routingContext) {
@@ -253,7 +247,6 @@ class ManagerRoutesHandlers {
         if (clientResult.result() != null) {
           getClient.complete();
         } else {
-          getClient.fail("Client not found");
           routingContext.response().setStatusCode(404).end();
         }
       } else {

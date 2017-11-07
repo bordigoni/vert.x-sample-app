@@ -10,6 +10,7 @@
   <tr *ngFor="let pollSource of pollSources$ | async ">
     <td>{{pollSource.url}}</td>
     <td>{{pollSource.delay}}</td>
+    <td><a [routerLink]="pollSource.id">edit</a></td>
   </tr>
 </table>
 

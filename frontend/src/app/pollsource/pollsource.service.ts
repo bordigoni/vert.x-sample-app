@@ -13,16 +13,12 @@ export class PollsourceService {
   constructor(private http: Http) {
   }
 
-  save(clientId: string, pollSource: PollSource): Observable<PollSource> {
-    return this.http.post(
-      this.formatUrl(clientId), pollSource)
-      .map(r => r.json());
+  save(clientId: string, pollSource: PollSource): Observable<any> {
+    return this.http.post(this.formatUrl(clientId), pollSource);
   }
 
-  update(clientId: string, pollSource: PollSource): Observable<PollSource> {
-    return this.http.post(
-      this.formatUrl(clientId, pollSource.id), pollSource)
-      .map(r => r.json());
+  update(clientId: string, pollSource: PollSource): Observable<any> {
+    return this.http.put(this.formatUrl(clientId, pollSource.id), pollSource);
   }
 
   getAll(clientId: string): Observable<Array<PollSource>> {
