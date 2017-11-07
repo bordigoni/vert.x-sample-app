@@ -7,6 +7,7 @@ import {HomeComponent} from './home/home.component';
 import {ClientModule} from './client/client.module';
 import {AppRoutingModule} from './app-routing.module';
 import {PageNotFoundComponent} from './page-not-found';
+import {PollsourceModule} from './pollsource/pollsource.module';
 
 
 @NgModule({
@@ -19,6 +20,7 @@ import {PageNotFoundComponent} from './page-not-found';
     BrowserModule,
     HttpModule,
     ClientModule,
+    PollsourceModule,
     AppRoutingModule
   ],
   bootstrap: [AppComponent]

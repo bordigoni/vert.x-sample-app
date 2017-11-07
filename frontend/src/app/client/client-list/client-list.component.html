@@ -8,6 +8,7 @@ Manage client here, create, edit, delete.
   <tr *ngFor="let client of client$ | async">
     <td>{{client.name}}</td>
     <td><a [routerLink]="['/client', client.id]">{{client.email}}</a></td>
+    <td><a [routerLink]="['/client', client.id,'pollsource']">View sources</a></td>
   </tr>
 </table>
 

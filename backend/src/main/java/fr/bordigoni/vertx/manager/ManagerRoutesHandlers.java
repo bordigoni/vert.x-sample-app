@@ -253,8 +253,8 @@ class ManagerRoutesHandlers {
         if (clientResult.result() != null) {
           getClient.complete();
         } else {
-          routingContext.response().setStatusCode(404).end();
           getClient.fail("Client not found");
+          routingContext.response().setStatusCode(404).end();
         }
       } else {
         getClient.fail(clientResult.cause());

@@ -42,7 +42,7 @@ export class ClientEditComponent implements OnInit {
   }
 
   back() {
-    this.router.navigate(['/clients']);
+    this.router.navigate(['/client']);
   }
 
 }

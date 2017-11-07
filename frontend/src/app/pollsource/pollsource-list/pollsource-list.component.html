@@ -1,0 +1,17 @@
+<button (click)="back()">Back</button>
+
+<h4>Pollsources {{clientId}}</h4>
+
+<table>
+  <tr>
+    <th>URL</th>
+    <th>Polling delay</th>
+  </tr>
+  <tr *ngFor="let pollSource of pollSources$ | async ">
+    <td>{{pollSource.url}}</td>
+    <td>{{pollSource.delay}}</td>
+  </tr>
+</table>
+
+
+<button routerLink="new">Create new</button>
