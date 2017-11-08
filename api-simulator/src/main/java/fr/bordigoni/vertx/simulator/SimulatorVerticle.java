@@ -1,11 +1,11 @@
 package fr.bordigoni.vertx.simulator;
 
-import io.vertx.core.AbstractVerticle;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.Router;
-import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.CorsHandler;
+import io.vertx.rxjava.core.AbstractVerticle;
+import io.vertx.rxjava.ext.web.Router;
+import io.vertx.rxjava.ext.web.RoutingContext;
+import io.vertx.rxjava.ext.web.handler.CorsHandler;
 
 import java.util.Random;
 
@@ -33,13 +33,14 @@ public class SimulatorVerticle extends AbstractVerticle {
     vertx.createHttpServer()
       .requestHandler(router::accept)
       .listen(config().getInteger(CONFIG_HTTP_PORT, 10000));
+
   }
 
   private void stocks(RoutingContext routingContext) {
 
     String code = routingContext.pathParam("code");
 
-    if (shouldGenerateANewValue()) {
+    if (stockValue == null || shouldGenerateANewValue()) {
       stockValue = new JsonObject()
         .put("timestamp", System.currentTimeMillis())
         .put("code", code)
