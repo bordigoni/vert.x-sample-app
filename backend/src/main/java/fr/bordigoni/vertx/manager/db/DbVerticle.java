@@ -7,22 +7,18 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.jdbc.JDBCClient;
 import io.vertx.serviceproxy.ServiceBinder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
  */
 public class DbVerticle extends AbstractVerticle {
 
-  private static final Logger LOG = LoggerFactory.getLogger(DbVerticle.class);
-
 
   public static final String CONFIG_DB_URL = "db.url";
-  public static final String CONFIG_DB_USER = "db.user";
-  public static final String CONFIG_DB_PASSWORD = "db.password";
-  public static final String CONFIG_DB_DRIVER_CLASS = "db.driver.class";
-  public static final String CONFIG_DB_MAX_POOL_SIZE = "db.max_pool_size";
+  private static final String CONFIG_DB_USER = "db.user";
+  private static final String CONFIG_DB_PASSWORD = "db.password";
+  private static final String CONFIG_DB_DRIVER_CLASS = "db.driver.class";
+  private static final String CONFIG_DB_MAX_POOL_SIZE = "db.max_pool_size";
 
   private JDBCClient dbClient;
 
