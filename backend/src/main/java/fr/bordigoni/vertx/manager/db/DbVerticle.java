@@ -6,7 +6,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.jdbc.JDBCClient;
-import io.vertx.serviceproxy.ProxyHelper;
+import io.vertx.serviceproxy.ServiceBinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +41,9 @@ public class DbVerticle extends AbstractVerticle {
 
     PollSourceService.createService(this.dbClient, serviceCreation -> {
       if (serviceCreation.succeeded()) {
-        ProxyHelper.registerService(PollSourceService.class, this.vertx, serviceCreation.result(), PollSourceService.NAME);
+        new ServiceBinder(vertx)
+          .setAddress(PollSourceService.NAME)
+          .register(PollSourceService.class, serviceCreation.result());
         pollSourceServiceCreation.complete();
       } else {
         pollSourceServiceCreation.fail(serviceCreation.cause());
@@ -54,7 +56,9 @@ public class DbVerticle extends AbstractVerticle {
 
       ClientService.createService(this.dbClient, serviceCreation -> {
         if (serviceCreation.succeeded()) {
-          ProxyHelper.registerService(ClientService.class, this.vertx, serviceCreation.result(), ClientService.NAME);
+          new ServiceBinder(vertx)
+            .setAddress(ClientService.NAME)
+            .register(ClientService.class, serviceCreation.result());
           clientServiceCreation.complete();
         } else {
           clientServiceCreation.fail(serviceCreation.cause());
