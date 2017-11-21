@@ -7,9 +7,9 @@ import org.slf4j.LoggerFactory;
 /**
  * Created by benoit on 08/11/2017.
  */
-public class Main {
+public class ApiSimulator {
 
-  private static final Logger logger = LoggerFactory.getLogger(Main.class);
+  private static final Logger logger = LoggerFactory.getLogger(ApiSimulator.class);
 
   public static void main(String[] args) {
 

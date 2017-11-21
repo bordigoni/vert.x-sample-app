@@ -16,7 +16,7 @@
   <packaging>jar</packaging>
 
   <properties>
-    <main.verticle>fr.bordigoni.vertx.simulator.Main</main.verticle>
+    <main.verticle>fr.bordigoni.vertx.simulator.ApiSimulator</main.verticle>
   </properties>
 
   <dependencies>

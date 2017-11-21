@@ -25,6 +25,11 @@
       <artifactId>vertx-core</artifactId>
     </dependency>
     <dependency>
+      <groupId>com.flipkart.zjsonpatch</groupId>
+      <artifactId>zjsonpatch</artifactId>
+      <version>0.3.6</version>
+    </dependency>
+    <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-config</artifactId>
     </dependency>
